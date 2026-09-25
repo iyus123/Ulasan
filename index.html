@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beri Kami Ulasan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .star { transition: color 0.2s, transform 0.2s; cursor: pointer; }
+        .star:hover { transform: scale(1.1); }
+        .star-active { color: #F59E0B; /* Warna Kuning Emas */ }
+        .star-inactive { color: #D1D5DB; /* Warna Abu-abu */ }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Bagaimana Pengalaman Anda?</h1>
+        <p class="text-gray-500 text-sm mb-6">Ketuk bintang untuk memberikan penilaian</p>
+        
+        <!-- Bintang -->
+        <div class="flex justify-center space-x-2 text-4xl mb-6" id="star-container">
+            <i class="fa-solid fa-star star star-inactive" data-rating="1" onclick="rate(1)" onmouseover="hoverStars(1)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="2" onclick="rate(2)" onmouseover="hoverStars(2)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="3" onclick="rate(3)" onmouseover="hoverStars(3)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="4" onclick="rate(4)" onmouseover="hoverStars(4)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="5" onclick="rate(5)" onmouseover="hoverStars(5)" onmouseout="resetStars()"></i>
+        </div>
+
+        <p id="rating-text" class="text-gray-600 font-medium h-6"></p>
+        
+        <div id="loading" class="hidden mt-4 text-sm text-blue-600 font-semibold animate-pulse">
+            <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Mengarahkan Anda...
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PENGATURAN OTOMATIS MENGGUNAKAN PARAMETER URL
+        // ==========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // 1. Ambil nomor WA dari URL (jika kosong, gunakan default)
+        let waRaw = urlParams.get('wa') || "083894403505";
+        
+        // Format otomatis nomor WA (ubah 0 jadi 62)
+        if (waRaw.startsWith("0")) {
+            waRaw = "62" + waRaw.substring(1);
+        }
+        
+        // 2. Ambil Place ID dari URL (jika kosong, gunakan default)
+        // Default ini adalah Place ID contoh yang Anda berikan
+        let placeId = urlParams.get('placeid') || "ChIJ0dJevCmB9i0R826GjTqIbnw"; 
+
+        // 3. Pesan template WhatsApp
+        const waMessage = encodeURIComponent("Halo Admin, saya ingin memberikan masukan/komplain mengenai layanan Anda.");
+
+        // ==========================================
+        // LOGIKA BINTANG DAN REDIRECT
+        // ==========================================
+        const stars = document.querySelectorAll('.star');
+        const ratingText = document.getElementById('rating-text');
+        const loadingDiv = document.getElementById('loading');
+        let selectedRating = 0;
+
+        const texts = ["", "Sangat Buruk 😞", "Buruk 🙁", "Cukup 😐", "Bagus! 🙂", "Sangat Bagus! 🤩"];
+
+        function hoverStars(rating) {
+            if (selectedRating > 0) return;
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.replace('star-inactive', 'star-active');
+                } else {
+                    star.classList.replace('star-active', 'star-inactive');
+                }
+            });
+            ratingText.innerText = texts[rating];
+        }
+
+        function resetStars() {
+            if (selectedRating > 0) return;
+            stars.forEach(star => star.classList.replace('star-active', 'star-inactive'));
+            ratingText.innerText = "";
+        }
+
+        function rate(rating) {
+            if (selectedRating > 0) return; // Kunci jika sudah ditekan
+            selectedRating = rating;
+            hoverStars(rating);
+            
+            loadingDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                if (rating <= 3) {
+                    // Redirect ke WA
+                    window.location.href = `https://wa.me/${waRaw}?text=${waMessage}`;
+                } else {
+                    // Redirect ke Google Maps Review menggunakan Place ID
+                    window.location.href = `https://search.google.com/local/writereview?placeid=${placeId}`;
+                }
+            }, 1000); // Jeda 1 detik agar animasi terlihat
+        }
+    </script>
+</body>
+</html>
