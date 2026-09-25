@@ -4,23 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beri Kami Ulasan</title>
-    <!-- CSS Cadangan (Mencegah tampilan menumpuk jika CDN Tailwind gagal) -->
-    <style>
-        .hidden { display: none !important; }
-        .star { cursor: pointer; transition: color 0.2s, transform 0.2s; }
-        .star-active { color: #F59E0B; }
-        .star-inactive { color: #D1D5DB; }
-        .star-locked { color: #E5E7EB; cursor: not-allowed; }
-    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .star { transition: color 0.2s, transform 0.2s; }
+        .star-active { color: #F59E0B; cursor: pointer; }
+        .star-inactive { color: #D1D5DB; cursor: pointer; }
+        .star-locked { color: #E5E7EB; cursor: not-allowed; }
+    </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
 
     <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center relative overflow-hidden" id="main-card">
         
         <!-- Layar Loading Awal -->
-        <div id="initial-loading" class="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6">
+        <div id="initial-loading" class="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center">
             <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
             <p class="text-gray-600 font-medium animate-pulse">Menyiapkan sistem...</p>
         </div>
@@ -32,17 +30,16 @@
             <p id="error-message" class="text-gray-500 text-sm">Sistem ini belum dihubungkan ke toko.</p>
         </div>
 
-        <!-- Layar Utama -->
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Bagaimana Pengalaman Anda?</h1>
         <p class="text-gray-500 text-sm mb-6">Ketuk bintang untuk memberikan penilaian</p>
         
         <!-- Bintang -->
         <div class="flex justify-center space-x-2 text-4xl mb-6" id="star-container">
-            <i class="fa-solid fa-star star star-inactive" data-rating="1" onclick="rate(1)" onmouseover="hoverStars(1)" onmouseout="resetStars()">★</i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="2" onclick="rate(2)" onmouseover="hoverStars(2)" onmouseout="resetStars()">★</i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="3" onclick="rate(3)" onmouseover="hoverStars(3)" onmouseout="resetStars()">★</i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="4" onclick="rate(4)" onmouseover="hoverStars(4)" onmouseout="resetStars()">★</i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="5" onclick="rate(5)" onmouseover="hoverStars(5)" onmouseout="resetStars()">★</i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="1" onclick="rate(1)" onmouseover="hoverStars(1)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="2" onclick="rate(2)" onmouseover="hoverStars(2)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="3" onclick="rate(3)" onmouseover="hoverStars(3)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="4" onclick="rate(4)" onmouseover="hoverStars(4)" onmouseout="resetStars()"></i>
+            <i class="fa-solid fa-star star star-inactive" data-rating="5" onclick="rate(5)" onmouseover="hoverStars(5)" onmouseout="resetStars()"></i>
         </div>
 
         <p id="rating-text" class="text-gray-600 font-medium h-6"></p>
@@ -54,11 +51,11 @@
     </div>
 
     <script>
-        // MASUKKAN URL APPS SCRIPT ANDA DI SINI
-        const apiURL = "https://script.google.com/macros/s/AKfycbwDg0lD6Y72GlaLoKQfbMosuCU_MXOeQ1itG3u7066p4jypDMWTZrQ9yvsc5HbgnT_6/exec"; 
+        // === GANTI URL DI BAWAH INI DENGAN URL DARI GOOGLE APPS SCRIPT ANDA ===
+        const apiURL = "https://script.google.com/macros/s/AKfycbz3F6aenfPoU7J61DEnYdBQjqQAkmZK8WXdgbdOlSGTWCWqt0FK5gyAqZHveXvFyVnI/exec"; 
 
         const urlParams = new URLSearchParams(window.location.search);
-        const qrId = urlParams.get('id'); // Mengambil id dari URL (?id=001)
+        const qrId = urlParams.get('id'); // Mengambil id dari link (misal: ?id=001)
         
         let clientWA = "";
         let clientPlaceID = "";
@@ -73,20 +70,25 @@
         let selectedRating = 0;
         let isSystemReady = false;
 
+        // Mengecek database via API
         if(!qrId) {
-            showError("QR Code tidak valid (ID tidak ditemukan di URL).");
+            showError("QR Code tidak valid (ID tidak ditemukan).");
         } else {
             fetch(`${apiURL}?id=${qrId}`)
                 .then(response => response.json())
                 .then(data => {
                     if(data.found) {
+                        // Data ditemukan dan status Aktif
                         clientWA = data.wa.toString();
                         if (clientWA.startsWith("0")) { clientWA = "62" + clientWA.substring(1); }
+                        
                         clientPlaceID = data.placeid;
                         isSystemReady = true;
                         
+                        // Sembunyikan layar loading awal
                         initialLoading.classList.add('hidden');
                     } else {
+                        // Data tidak ditemukan atau belum aktif
                         showError(data.message);
                     }
                 })
@@ -100,6 +102,7 @@
             errorScreen.classList.remove('hidden');
             errorMessage.innerText = msg;
             
+            // Kunci bintang
             stars.forEach(star => {
                 star.classList.replace('star-inactive', 'star-locked');
                 star.onclick = null;
