@@ -4,148 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beri Kami Ulasan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .star { transition: color 0.2s, transform 0.2s; }
-        .star-active { color: #F59E0B; cursor: pointer; }
-        .star-inactive { color: #D1D5DB; cursor: pointer; }
-        .star-locked { color: #E5E7EB; cursor: not-allowed; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+        .card { background: #ffffff; padding: 32px 24px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); max-width: 360px; width: 100%; text-align: center; position: relative; }
+        h1 { font-size: 1.35rem; color: #1f2937; margin-bottom: 8px; font-weight: 700; }
+        p.sub { font-size: 0.875rem; color: #6b7280; margin-bottom: 24px; }
+        .stars { display: flex; justify-content: center; gap: 10px; font-size: 2.6rem; margin-bottom: 16px; user-select: none; }
+        .star { cursor: pointer; color: #d1d5db; transition: color 0.15s, transform 0.15s; }
+        .star.active { color: #f59e0b; transform: scale(1.1); }
+        .rating-text { font-size: 0.95rem; font-weight: 600; color: #374151; min-height: 24px; }
+        .loading-redirect { display: none; margin-top: 16px; font-size: 0.875rem; color: #2563eb; font-weight: 600; }
+        .error-screen { display: none; padding: 12px; }
+        .error-screen.show { display: block; }
+        .error-title { font-size: 1.15rem; color: #dc2626; font-weight: 700; margin-bottom: 6px; }
+        .error-desc { font-size: 0.875rem; color: #6b7280; }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
+<body>
 
-    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center relative overflow-hidden" id="main-card">
-        
-        <!-- Layar Loading Awal -->
-        <div id="initial-loading" class="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
-            <p class="text-gray-600 font-medium animate-pulse">Menyiapkan sistem...</p>
+    <div class="card">
+        <!-- Tampilan Error (Jika ID QR Tidak Valid / Belum Aktif) -->
+        <div id="error-screen" class="error-screen">
+            <div class="error-title">⚠️ QR Code Tidak Valid</div>
+            <div id="error-message" class="error-desc">Sistem ini belum dihubungkan ke toko.</div>
         </div>
 
-        <!-- Layar Pesan Error/Belum Aktif -->
-        <div id="error-screen" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center hidden p-6">
-            <i class="fa-solid fa-triangle-exclamation text-5xl text-yellow-500 mb-4"></i>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">QR Code Belum Aktif</h2>
-            <p id="error-message" class="text-gray-500 text-sm">Sistem ini belum dihubungkan ke toko.</p>
-        </div>
+        <!-- Tampilan Utama (Langsung Tampil Instan Tanpa Loading) -->
+        <div id="main-content">
+            <h1>Bagaimana Pengalaman Anda?</h1>
+            <p class="sub">Ketuk bintang untuk memberikan penilaian</p>
+            
+            <div class="stars">
+                <span class="star" onclick="rate(1)">★</span>
+                <span class="star" onclick="rate(2)">★</span>
+                <span class="star" onclick="rate(3)">★</span>
+                <span class="star" onclick="rate(4)">★</span>
+                <span class="star" onclick="rate(5)">★</span>
+            </div>
 
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">Bagaimana Pengalaman Anda?</h1>
-        <p class="text-gray-500 text-sm mb-6">Ketuk bintang untuk memberikan penilaian</p>
-        
-        <!-- Bintang -->
-        <div class="flex justify-center space-x-2 text-4xl mb-6" id="star-container">
-            <i class="fa-solid fa-star star star-inactive" data-rating="1" onclick="rate(1)" onmouseover="hoverStars(1)" onmouseout="resetStars()"></i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="2" onclick="rate(2)" onmouseover="hoverStars(2)" onmouseout="resetStars()"></i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="3" onclick="rate(3)" onmouseover="hoverStars(3)" onmouseout="resetStars()"></i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="4" onclick="rate(4)" onmouseover="hoverStars(4)" onmouseout="resetStars()"></i>
-            <i class="fa-solid fa-star star star-inactive" data-rating="5" onclick="rate(5)" onmouseover="hoverStars(5)" onmouseout="resetStars()"></i>
-        </div>
-
-        <p id="rating-text" class="text-gray-600 font-medium h-6"></p>
-        
-        <!-- Loading Redirect -->
-        <div id="loading" class="hidden mt-4 text-sm text-blue-600 font-semibold animate-pulse">
-            <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Mengarahkan Anda...
+            <div id="rating-text" class="rating-text"></div>
+            
+            <div id="redirect-loading" class="loading-redirect">
+                ⏳ Memproses masukan Anda...
+            </div>
         </div>
     </div>
 
     <script>
-        // === GANTI URL DI BAWAH INI DENGAN URL DARI GOOGLE APPS SCRIPT ANDA ===
-        const apiURL = "https://script.google.com/macros/s/AKfycbz3F6aenfPoU7J61DEnYdBQjqQAkmZK8WXdgbdOlSGTWCWqt0FK5gyAqZHveXvFyVnI/exec"; 
+        // MASUKKAN URL APPS SCRIPT ANDA DI SINI
+        const apiURL = "https://script.google.com/macros/s/AKfycbwDg0lD6Y72GlaLoKQfbMosuCU_MXOeQ1itG3u7066p4jypDMWTZrQ9yvsc5HbgnT_6/exec"; 
 
         const urlParams = new URLSearchParams(window.location.search);
-        const qrId = urlParams.get('id'); // Mengambil id dari link (misal: ?id=001)
-        
-        let clientWA = "";
-        let clientPlaceID = "";
-        
-        const initialLoading = document.getElementById('initial-loading');
-        const errorScreen = document.getElementById('error-screen');
-        const errorMessage = document.getElementById('error-message');
-        const stars = document.querySelectorAll('.star');
-        const ratingText = document.getElementById('rating-text');
-        const loadingDiv = document.getElementById('loading');
-        
-        let selectedRating = 0;
-        let isSystemReady = false;
+        const qrId = urlParams.get('id');
 
-        // Mengecek database via API
-        if(!qrId) {
-            showError("QR Code tidak valid (ID tidak ditemukan).");
+        let storeData = null;
+        let isError = false;
+
+        // Ambil data toko di latar belakang (Background Fetch)
+        if (!qrId) {
+            showError("QR Code tidak valid (ID tidak ditemukan di link).");
         } else {
             fetch(`${apiURL}?id=${qrId}`)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    if(data.found) {
-                        // Data ditemukan dan status Aktif
-                        clientWA = data.wa.toString();
-                        if (clientWA.startsWith("0")) { clientWA = "62" + clientWA.substring(1); }
-                        
-                        clientPlaceID = data.placeid;
-                        isSystemReady = true;
-                        
-                        // Sembunyikan layar loading awal
-                        initialLoading.classList.add('hidden');
+                    if (data.found) {
+                        storeData = data;
                     } else {
-                        // Data tidak ditemukan atau belum aktif
                         showError(data.message);
                     }
                 })
-                .catch(error => {
-                    showError("Gagal terhubung ke database. Coba lagi nanti.");
+                .catch(() => {
+                    showError("Gagal terhubung ke database server.");
                 });
         }
 
-        function showError(msg) {
-            initialLoading.classList.add('hidden');
-            errorScreen.classList.remove('hidden');
-            errorMessage.innerText = msg;
-            
-            // Kunci bintang
-            stars.forEach(star => {
-                star.classList.replace('star-inactive', 'star-locked');
-                star.onclick = null;
-                star.onmouseover = null;
-            });
-        }
-
         const texts = ["", "Sangat Buruk 😞", "Buruk 🙁", "Cukup 😐", "Bagus! 🙂", "Sangat Bagus! 🤩"];
+        const stars = document.querySelectorAll('.star');
 
-        function hoverStars(rating) {
-            if (selectedRating > 0 || !isSystemReady) return;
-            stars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.replace('star-inactive', 'star-active');
-                } else {
-                    star.classList.replace('star-active', 'star-inactive');
-                }
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseout', () => resetStars());
+        });
+
+        function highlightStars(count) {
+            if (isError) return;
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('active');
+                else s.classList.remove('active');
             });
-            ratingText.innerText = texts[rating];
+            document.getElementById('rating-text').innerText = texts[count];
         }
 
         function resetStars() {
-            if (selectedRating > 0 || !isSystemReady) return;
-            stars.forEach(star => star.classList.replace('star-active', 'star-inactive'));
-            ratingText.innerText = "";
+            if (isError) return;
+            stars.forEach(s => s.classList.remove('active'));
+            document.getElementById('rating-text').innerText = "";
         }
 
         function rate(rating) {
-            if (selectedRating > 0 || !isSystemReady) return;
+            if (isError) return;
             
-            selectedRating = rating;
-            hoverStars(rating);
-            loadingDiv.classList.remove('hidden');
+            highlightStars(rating);
+            document.getElementById('redirect-loading').style.display = 'block';
 
-            const waMessage = encodeURIComponent("Halo Admin, saya ingin memberikan masukan mengenai layanan Anda.");
-
-            setTimeout(() => {
-                if (rating <= 3) {
-                    window.location.href = `https://wa.me/${clientWA}?text=${waMessage}`;
-                } else {
-                    window.location.href = `https://search.google.com/local/writereview?placeid=${clientPlaceID}`;
+            // Menunggu respon data background jika pengguna mengklik sangat cepat
+            const checkDataAndRedirect = () => {
+                if (!storeData && !isError) {
+                    setTimeout(checkDataAndRedirect, 150);
+                    return;
                 }
-            }, 1000);
+
+                if (isError) return;
+
+                let wa = storeData.wa ? storeData.wa.toString() : "";
+                if (wa.startsWith("0")) wa = "62" + wa.substring(1);
+                
+                const waMessage = encodeURIComponent("Halo Admin, saya ingin memberikan masukan mengenai layanan Anda.");
+
+                if (rating <= 3) {
+                    window.location.href = `https://wa.me/${wa}?text=${waMessage}`;
+                } else {
+                    window.location.href = `https://search.google.com/local/writereview?placeid=${storeData.placeid}`;
+                }
+            };
+
+            checkDataAndRedirect();
+        }
+
+        function showError(msg) {
+            isError = true;
+            document.getElementById('main-content').classList.add('hidden');
+            const errScreen = document.getElementById('error-screen');
+            document.getElementById('error-message').innerText = msg;
+            errScreen.classList.add('show');
         }
     </script>
 </body>
