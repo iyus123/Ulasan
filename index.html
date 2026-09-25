@@ -12,10 +12,20 @@
         h1 { font-size: 1.35rem; color: #111827; margin-bottom: 8px; font-weight: 700; letter-spacing: -0.02em; }
         p.sub { font-size: 0.875rem; color: #6b7280; margin-bottom: 24px; }
         
-        /* Star Rating */
-        .stars { display: flex; justify-content: center; gap: 10px; font-size: 2.6rem; margin-bottom: 16px; user-select: none; }
-        .star { cursor: pointer; color: #e5e7eb; transition: color 0.15s ease, transform 0.15s ease; }
-        .star.active { color: #f59e0b; transform: scale(1.12); }
+        /* Star Rating SVG Styling */
+        .stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; user-select: none; }
+        .star { 
+            width: 42px; 
+            height: 42px; 
+            cursor: pointer; 
+            fill: #e5e7eb; /* Warna bintang belum dipilih */
+            transition: fill 0.15s ease, transform 0.15s ease; 
+        }
+        .star.active { 
+            fill: #f59e0b; /* Warna kuning emas bintang aktif */
+            transform: scale(1.12); 
+        }
+        
         .rating-text { font-size: 0.95rem; font-weight: 600; color: #374151; min-height: 24px; }
         
         /* Indikator Loading Smooth (Pill Badge + Spinner) */
@@ -80,12 +90,13 @@
             <h1>Bagaimana Pengalaman Anda?</h1>
             <p class="sub">Ketuk bintang untuk memberikan penilaian</p>
             
+            <!-- Bintang SVG Halus/Rounded -->
             <div class="stars">
-                <span class="star" onclick="rate(1)">★</span>
-                <span class="star" onclick="rate(2)">★</span>
-                <span class="star" onclick="rate(3)">★</span>
-                <span class="star" onclick="rate(4)">★</span>
-                <span class="star" onclick="rate(5)">★</span>
+                <svg class="star" onclick="rate(1)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="rate(2)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="rate(3)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="rate(4)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="rate(5)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             </div>
 
             <div id="rating-text" class="rating-text"></div>
