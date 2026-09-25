@@ -7,14 +7,58 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
-        .card { background: #ffffff; padding: 32px 24px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); max-width: 360px; width: 100%; text-align: center; position: relative; }
-        h1 { font-size: 1.35rem; color: #1f2937; margin-bottom: 8px; font-weight: 700; }
+        .card { background: #ffffff; padding: 36px 24px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); max-width: 360px; width: 100%; text-align: center; position: relative; }
+        
+        h1 { font-size: 1.35rem; color: #111827; margin-bottom: 8px; font-weight: 700; letter-spacing: -0.02em; }
         p.sub { font-size: 0.875rem; color: #6b7280; margin-bottom: 24px; }
+        
+        /* Star Rating */
         .stars { display: flex; justify-content: center; gap: 10px; font-size: 2.6rem; margin-bottom: 16px; user-select: none; }
-        .star { cursor: pointer; color: #d1d5db; transition: color 0.15s, transform 0.15s; }
-        .star.active { color: #f59e0b; transform: scale(1.1); }
+        .star { cursor: pointer; color: #e5e7eb; transition: color 0.15s ease, transform 0.15s ease; }
+        .star.active { color: #f59e0b; transform: scale(1.12); }
         .rating-text { font-size: 0.95rem; font-weight: 600; color: #374151; min-height: 24px; }
-        .loading-redirect { display: none; margin-top: 16px; font-size: 0.875rem; color: #2563eb; font-weight: 600; }
+        
+        /* Indikator Loading Smooth (Pill Badge + Spinner) */
+        .loading-redirect {
+            display: none;
+            margin: 20px auto 0;
+            padding: 8px 16px;
+            background-color: #f3f4f6;
+            border-radius: 50px;
+            font-size: 0.825rem;
+            color: #4b5563;
+            font-weight: 500;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: fit-content;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .loading-redirect.show {
+            display: inline-flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Spinner CSS Murni */
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Screen Error */
         .error-screen { display: none; padding: 12px; }
         .error-screen.show { display: block; }
         .error-title { font-size: 1.15rem; color: #dc2626; font-weight: 700; margin-bottom: 6px; }
@@ -25,13 +69,13 @@
 <body>
 
     <div class="card">
-        <!-- Tampilan Error (Jika ID QR Tidak Valid / Belum Aktif) -->
+        <!-- Tampilan Error (Jika ID QR Tidak Valid) -->
         <div id="error-screen" class="error-screen">
             <div class="error-title">⚠️ QR Code Tidak Valid</div>
             <div id="error-message" class="error-desc">Sistem ini belum dihubungkan ke toko.</div>
         </div>
 
-        <!-- Tampilan Utama (Langsung Tampil Instan Tanpa Loading) -->
+        <!-- Tampilan Utama -->
         <div id="main-content">
             <h1>Bagaimana Pengalaman Anda?</h1>
             <p class="sub">Ketuk bintang untuk memberikan penilaian</p>
@@ -46,15 +90,17 @@
 
             <div id="rating-text" class="rating-text"></div>
             
+            <!-- Indikator Loading Smooth -->
             <div id="redirect-loading" class="loading-redirect">
-                ⏳ Memproses masukan Anda...
+                <div class="spinner"></div>
+                <span>Memproses masukan Anda...</span>
             </div>
         </div>
     </div>
 
     <script>
         // MASUKKAN URL APPS SCRIPT ANDA DI SINI
-        const apiURL = "https://script.google.com/macros/s/AKfycbwDg0lD6Y72GlaLoKQfbMosuCU_MXOeQ1itG3u7066p4jypDMWTZrQ9yvsc5HbgnT_6/exec"; 
+        const apiURL = "MASUKKAN_URL_APPS_SCRIPT_ANDA_DI_SINI"; 
 
         const urlParams = new URLSearchParams(window.location.search);
         const qrId = urlParams.get('id');
@@ -107,9 +153,11 @@
             if (isError) return;
             
             highlightStars(rating);
-            document.getElementById('redirect-loading').style.display = 'block';
+            
+            // Tampilkan loading badge dengan animasi smooth
+            const loadingBadge = document.getElementById('redirect-loading');
+            loadingBadge.classList.add('show');
 
-            // Menunggu respon data background jika pengguna mengklik sangat cepat
             const checkDataAndRedirect = () => {
                 if (!storeData && !isError) {
                     setTimeout(checkDataAndRedirect, 150);
