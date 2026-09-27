@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f3f4f6; display: flex; justify-content: center; min-height: 100vh; padding: 16px; }
-        .app-card { background: #ffffff; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; }
+        .app-card { background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; }
         
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { font-size: 1.25rem; color: #111827; font-weight: 700; }
@@ -43,11 +43,13 @@
             text-align: center; 
             cursor: pointer;
             transition: background 0.2s;
+            user-select: none;
         }
         .preview-box:hover { background: #dbeafe; }
         .preview-title { font-size: 0.75rem; color: #4b5563; font-weight: 600; margin-bottom: 6px; }
-        .preview-link { color: #2563eb; font-weight: 700; font-size: 0.85rem; word-break: break-all; }
-        .copy-toast { display: none; margin-top: 6px; font-size: 0.75rem; color: #166534; font-weight: 700; }
+        .preview-link { color: #2563eb; font-weight: 700; font-size: 0.85rem; word-break: break-all; margin-bottom: 4px; }
+        .copy-hint { font-size: 0.7rem; color: #2563eb; font-weight: 600; text-decoration: underline; }
+        .copy-toast { display: none; margin-top: 6px; font-size: 0.8rem; color: #166534; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -91,17 +93,27 @@
 
         <!-- Box Link Aktif (Klik untuk Salin) -->
         <div id="preview-box" class="preview-box" onclick="copyToClipboard()">
-            <div class="preview-title">📋 Klik di sini untuk menyalin Link Review:</div>
+            <div class="preview-title">📋 Link Review Aktif (Klik Kotak Ini untuk Copy):</div>
             <div id="preview-link" class="preview-link">https://...</div>
+            <div class="copy-hint">👇 Ketuk di sini untuk menyalin link</div>
             <div id="copy-toast" class="copy-toast">✅ Link berhasil disalin ke clipboard!</div>
         </div>
     </div>
 
     <script>
-        // MASUKKAN URL APPS SCRIPT ANDA DI SINI
-        const apiURL = "https://script.google.com/macros/s/AKfycbyhylgg5EFYwBfVq91uuwCvSIZq7OyBbmJy_90-4rbWpxSr-mg3sJljDKCSpFomwMWs/exec"; 
+        // =========================================================
+        // PENGATURAN UTAMA ADMIN (UBAH SESUAI DATA ANDA)
+        // =========================================================
         
-        const baseReviewURL = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+        // 1. Masukkan URL Google Apps Script (/exec) Anda di sini
+        const apiURL = "https://script.google.com/macros/s/AKfycbyhylgg5EFYwBfVq91uuwCvSIZq7OyBbmJy_90-4rbWpxSr-mg3sJljDKCSpFomwMWs/exec"; 
+
+        // 2. Masukkan URL Website Utama (GitHub Pages) Anda di sini
+        // Contoh: "https://iyus123.github.io/ulasan/"
+        const baseWebURL = "https://iyus123.github.io/ulasan/"; 
+        
+        // =========================================================
+
         let generatedURL = "";
 
         function checkID() {
@@ -175,12 +187,22 @@
                         alertBox.innerText = data.message;
                         alertBox.style.display = 'block';
 
-                        // Set Link Review & Tampilkan Box
-                        generatedURL = `${baseReviewURL}?id=${id}`;
+                        // Format Link Domain Kebersihan
+                        let cleanBase = baseWebURL.trim();
+                        if (!cleanBase.endsWith('/') && !cleanBase.endsWith('.html')) {
+                            cleanBase += '/';
+                        }
+                        
+                        if (cleanBase.includes('index.html')) {
+                            generatedURL = `${cleanBase}?id=${id}`;
+                        } else {
+                            generatedURL = `${cleanBase}index.html?id=${id}`;
+                        }
+
                         previewLink.innerText = generatedURL;
                         previewBox.style.display = 'block';
 
-                        checkID(); // Refresh badge status
+                        checkID(); // Refresh status badge
                     } else {
                         alertBox.className = 'alert alert-error';
                         alertBox.innerText = data.message;
@@ -196,30 +218,44 @@
                 });
         }
 
+        // Fungsi Salin Link Otomatis
         function copyToClipboard() {
             if (!generatedURL) return;
 
-            navigator.clipboard.writeText(generatedURL).then(() => {
-                const toast = document.getElementById('copy-toast');
-                toast.style.display = 'block';
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 2500);
-            }).catch(() => {
-                // Fallback untuk browser lama
-                const tempInput = document.createElement("input");
-                tempInput.value = generatedURL;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(generatedURL).then(() => {
+                    showCopySuccess();
+                }).catch(() => {
+                    fallbackCopy(generatedURL);
+                });
+            } else {
+                fallbackCopy(generatedURL);
+            }
+        }
 
-                const toast = document.getElementById('copy-toast');
-                toast.style.display = 'block';
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 2500);
-            });
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCopySuccess();
+            } catch (err) {
+                alert("Gagal menyalin otomatis. Silakan salin teks link secara manual.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const toast = document.getElementById('copy-toast');
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
         }
     </script>
 </body>
