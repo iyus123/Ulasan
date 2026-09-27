@@ -16,7 +16,7 @@
         .form-group { margin-bottom: 16px; text-align: left; }
         label { display: block; font-size: 0.825rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
         input { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; outline: none; transition: border 0.2s; }
-        input:focus { border-color: #2563eb; ring: 2px #2563eb; }
+        input:focus { border-color: #2563eb; }
         
         .id-row { display: flex; gap: 8px; }
         .btn-search { padding: 0 16px; background: #e5e7eb; border: none; border-radius: 12px; font-weight: 600; color: #374151; cursor: pointer; }
@@ -32,8 +32,22 @@
         .alert-success { background: #d1fae5; color: #065f46; }
         .alert-error { background: #fee2e2; color: #991b1b; }
 
-        .preview-box { display: none; margin-top: 16px; padding: 12px; border: 1px dashed #2563eb; border-radius: 10px; background: #eff6ff; text-align: center; }
-        .preview-box a { color: #2563eb; font-weight: 600; text-decoration: none; font-size: 0.85rem; word-break: break-all; }
+        /* Box Link Klik untuk Copy */
+        .preview-box { 
+            display: none; 
+            margin-top: 16px; 
+            padding: 14px; 
+            border: 2px dashed #2563eb; 
+            border-radius: 12px; 
+            background: #eff6ff; 
+            text-align: center; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .preview-box:hover { background: #dbeafe; }
+        .preview-title { font-size: 0.75rem; color: #4b5563; font-weight: 600; margin-bottom: 6px; }
+        .preview-link { color: #2563eb; font-weight: 700; font-size: 0.85rem; word-break: break-all; }
+        .copy-toast { display: none; margin-top: 6px; font-size: 0.75rem; color: #166534; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -75,18 +89,20 @@
 
         <div id="alert-box" class="alert"></div>
 
-        <div id="preview-box" class="preview-box">
-            <p style="font-size: 0.75rem; color: #4b5563; margin-bottom: 4px;">Link Review Aktif:</p>
-            <a id="preview-link" href="#" target="_blank">Tes Link Review</a>
+        <!-- Box Link Aktif (Klik untuk Salin) -->
+        <div id="preview-box" class="preview-box" onclick="copyToClipboard()">
+            <div class="preview-title">📋 Klik di sini untuk menyalin Link Review:</div>
+            <div id="preview-link" class="preview-link">https://...</div>
+            <div id="copy-toast" class="copy-toast">✅ Link berhasil disalin ke clipboard!</div>
         </div>
     </div>
 
     <script>
-        // MASUKKAN URL APPS SCRIPT BARU ANDA DI SINI
-        const apiURL = "https://script.google.com/macros/s/AKfycbxK1480arSsbAuX2Kej42RyaUdOQov2l-3IpFEIs48wLPIsfMZPiJuuiHlMOLf6cgpy/exec"; 
+        // MASUKKAN URL APPS SCRIPT ANDA DI SINI
+        const apiURL = "https://script.google.com/macros/s/AKfycbyhylgg5EFYwBfVq91uuwCvSIZq7OyBbmJy_90-4rbWpxSr-mg3sJljDKCSpFomwMWs/exec"; 
         
-        // Alamat website utama tempat index.html disimpan
         const baseReviewURL = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+        let generatedURL = "";
 
         function checkID() {
             const id = document.getElementById('id').value.trim();
@@ -159,10 +175,9 @@
                         alertBox.innerText = data.message;
                         alertBox.style.display = 'block';
 
-                        // Tampilkan link preview untuk dites
-                        const targetURL = `${baseReviewURL}?id=${id}`;
-                        previewLink.href = targetURL;
-                        previewLink.innerText = targetURL;
+                        // Set Link Review & Tampilkan Box
+                        generatedURL = `${baseReviewURL}?id=${id}`;
+                        previewLink.innerText = generatedURL;
                         previewBox.style.display = 'block';
 
                         checkID(); // Refresh badge status
@@ -172,13 +187,39 @@
                         alertBox.style.display = 'block';
                     }
                 })
-                .catch(err => {
+                .catch(() => {
                     btn.disabled = false;
                     btn.innerText = "Aktivasi QR Code Sekarang";
                     alertBox.className = 'alert alert-error';
                     alertBox.innerText = "Gagal terhubung ke server.";
                     alertBox.style.display = 'block';
                 });
+        }
+
+        function copyToClipboard() {
+            if (!generatedURL) return;
+
+            navigator.clipboard.writeText(generatedURL).then(() => {
+                const toast = document.getElementById('copy-toast');
+                toast.style.display = 'block';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 2500);
+            }).catch(() => {
+                // Fallback untuk browser lama
+                const tempInput = document.createElement("input");
+                tempInput.value = generatedURL;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+
+                const toast = document.getElementById('copy-toast');
+                toast.style.display = 'block';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 2500);
+            });
         }
     </script>
 </body>
