@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Aktivasi QR</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f3f4f6; display: flex; justify-content: center; min-height: 100vh; padding: 16px; }
+        .app-card { background: #ffffff; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 1.25rem; color: #111827; font-weight: 700; }
+        .header p { font-size: 0.825rem; color: #6b7280; margin-top: 4px; }
+        
+        .form-group { margin-bottom: 16px; text-align: left; }
+        label { display: block; font-size: 0.825rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; outline: none; transition: border 0.2s; }
+        input:focus { border-color: #2563eb; ring: 2px #2563eb; }
+        
+        .id-row { display: flex; gap: 8px; }
+        .btn-search { padding: 0 16px; background: #e5e7eb; border: none; border-radius: 12px; font-weight: 600; color: #374151; cursor: pointer; }
+        
+        .btn-submit { width: 100%; padding: 14px; background: #2563eb; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+        .btn-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+        
+        .status-badge { display: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; text-align: center; }
+        .status-aktif { background: #dcfce7; color: #166534; }
+        .status-kosong { background: #fef3c7; color: #92400e; }
+        
+        .alert { display: none; padding: 12px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 16px; }
+        .alert-success { background: #d1fae5; color: #065f46; }
+        .alert-error { background: #fee2e2; color: #991b1b; }
+
+        .preview-box { display: none; margin-top: 16px; padding: 12px; border: 1px dashed #2563eb; border-radius: 10px; background: #eff6ff; text-align: center; }
+        .preview-box a { color: #2563eb; font-weight: 600; text-decoration: none; font-size: 0.85rem; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+    <div class="app-card">
+        <div class="header">
+            <h1>⚡ Panel Aktivasi QR Ulasan</h1>
+            <p>Input data klien untuk mengaktifkan QR Code</p>
+        </div>
+
+        <div id="status-badge" class="status-badge"></div>
+
+        <form id="activation-form" onsubmit="handleActivate(event)">
+            <div class="form-group">
+                <label for="id">ID QR Code / No. Seri</label>
+                <div class="id-row">
+                    <input type="text" id="id" placeholder="Contoh: 001" required onblur="checkID()">
+                    <button type="button" class="btn-search" onclick="checkID()">Cek</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nama">Nama Bisnis / Klien</label>
+                <input type="text" id="nama" placeholder="Contoh: SPPG SUKALUYU 3" required>
+            </div>
+
+            <div class="form-group">
+                <label for="wa">Nomor WhatsApp Admin Klien</label>
+                <input type="tel" id="wa" placeholder="Contoh: 083894403505" required>
+            </div>
+
+            <div class="form-group">
+                <label for="placeid">Google Maps Place ID</label>
+                <input type="text" id="placeid" placeholder="Contoh: ChIJw5NacwCPaS4R..." required>
+            </div>
+
+            <button type="submit" id="btn-save" class="btn-submit">Aktivasi QR Code Sekarang</button>
+        </form>
+
+        <div id="alert-box" class="alert"></div>
+
+        <div id="preview-box" class="preview-box">
+            <p style="font-size: 0.75rem; color: #4b5563; margin-bottom: 4px;">Link Review Aktif:</p>
+            <a id="preview-link" href="#" target="_blank">Tes Link Review</a>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL APPS SCRIPT BARU ANDA DI SINI
+        const apiURL = "https://script.google.com/macros/s/AKfycbxK1480arSsbAuX2Kej42RyaUdOQov2l-3IpFEIs48wLPIsfMZPiJuuiHlMOLf6cgpy/exec"; 
+        
+        // Alamat website utama tempat index.html disimpan
+        const baseReviewURL = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+
+        function checkID() {
+            const id = document.getElementById('id').value.trim();
+            if (!id) return;
+
+            const badge = document.getElementById('status-badge');
+            badge.style.display = 'block';
+            badge.className = 'status-badge status-kosong';
+            badge.innerText = '🔍 Memeriksa ID...';
+
+            fetch(`${apiURL}?action=get&id=${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.found) {
+                        document.getElementById('nama').value = data.nama || "";
+                        document.getElementById('wa').value = data.wa || "";
+                        document.getElementById('placeid').value = data.placeid || "";
+                        
+                        if (data.status === "Aktif") {
+                            badge.className = 'status-badge status-aktif';
+                            badge.innerText = `✅ ID ${id} Sudah Aktif (${data.nama})`;
+                        } else {
+                            badge.className = 'status-badge status-kosong';
+                            badge.innerText = `⚠️ ID ${id} Belum Aktif (Siap Diisi)`;
+                        }
+                    } else {
+                        badge.className = 'status-badge status-kosong';
+                        badge.innerText = `❌ ID ${id} Tidak Ditemukan di Spreadsheet`;
+                    }
+                })
+                .catch(() => {
+                    badge.style.display = 'none';
+                });
+        }
+
+        function handleActivate(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btn-save');
+            const alertBox = document.getElementById('alert-box');
+            const previewBox = document.getElementById('preview-box');
+            const previewLink = document.getElementById('preview-link');
+
+            const id = document.getElementById('id').value.trim();
+            const nama = document.getElementById('nama').value.trim();
+            const wa = document.getElementById('wa').value.trim();
+            const placeid = document.getElementById('placeid').value.trim();
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Menyimpan Data...";
+            alertBox.style.display = 'none';
+            previewBox.style.display = 'none';
+
+            const queryParams = new URLSearchParams({
+                action: 'activate',
+                id: id,
+                nama: nama,
+                wa: wa,
+                placeid: placeid
+            });
+
+            fetch(`${apiURL}?${queryParams.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerText = "Aktivasi QR Code Sekarang";
+
+                    if (data.success) {
+                        alertBox.className = 'alert alert-success';
+                        alertBox.innerText = data.message;
+                        alertBox.style.display = 'block';
+
+                        // Tampilkan link preview untuk dites
+                        const targetURL = `${baseReviewURL}?id=${id}`;
+                        previewLink.href = targetURL;
+                        previewLink.innerText = targetURL;
+                        previewBox.style.display = 'block';
+
+                        checkID(); // Refresh badge status
+                    } else {
+                        alertBox.className = 'alert alert-error';
+                        alertBox.innerText = data.message;
+                        alertBox.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerText = "Aktivasi QR Code Sekarang";
+                    alertBox.className = 'alert alert-error';
+                    alertBox.innerText = "Gagal terhubung ke server.";
+                    alertBox.style.display = 'block';
+                });
+        }
+    </script>
+</body>
+</html>
