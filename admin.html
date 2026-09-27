@@ -101,18 +101,8 @@
     </div>
 
     <script>
-        // =========================================================
-        // PENGATURAN UTAMA ADMIN (UBAH SESUAI DATA ANDA)
-        // =========================================================
-        
-        // 1. Masukkan URL Google Apps Script (/exec) Anda di sini
-        const apiURL = "https://script.google.com/macros/s/AKfycbyhylgg5EFYwBfVq91uuwCvSIZq7OyBbmJy_90-4rbWpxSr-mg3sJljDKCSpFomwMWs/exec"; 
-
-        // 2. Masukkan URL Website Utama (GitHub Pages) Anda di sini
-        // Contoh: "https://iyus123.github.io/ulasan/"
-        const baseWebURL = "https://iyus123.github.io/ulasan/"; 
-        
-        // =========================================================
+        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA (/exec) DI SINI
+        const apiURL = "https://script.google.com/macros/s/AKfycbxUlJQEBCGU3rMI4fsshkBfjr5j24tlaVfH7ljz0pB1FOhHgPdd96I3voCyX_59vohE/exec"; 
 
         let generatedURL = "";
 
@@ -121,6 +111,9 @@
             if (!id) return;
 
             const badge = document.getElementById('status-badge');
+            const previewBox = document.getElementById('preview-box');
+            const previewLink = document.getElementById('preview-link');
+
             badge.style.display = 'block';
             badge.className = 'status-badge status-kosong';
             badge.innerText = '🔍 Memeriksa ID...';
@@ -136,13 +129,22 @@
                         if (data.status === "Aktif") {
                             badge.className = 'status-badge status-aktif';
                             badge.innerText = `✅ ID ${id} Sudah Aktif (${data.nama})`;
+                            
+                            // Tampilkan link dari Kolom F jika ada
+                            if (data.link) {
+                                generatedURL = data.link;
+                                previewLink.innerText = generatedURL;
+                                previewBox.style.display = 'block';
+                            }
                         } else {
                             badge.className = 'status-badge status-kosong';
                             badge.innerText = `⚠️ ID ${id} Belum Aktif (Siap Diisi)`;
+                            previewBox.style.display = 'none';
                         }
                     } else {
                         badge.className = 'status-badge status-kosong';
                         badge.innerText = `❌ ID ${id} Tidak Ditemukan di Spreadsheet`;
+                        previewBox.style.display = 'none';
                     }
                 })
                 .catch(() => {
@@ -187,20 +189,13 @@
                         alertBox.innerText = data.message;
                         alertBox.style.display = 'block';
 
-                        // Format Link Domain Kebersihan
-                        let cleanBase = baseWebURL.trim();
-                        if (!cleanBase.endsWith('/') && !cleanBase.endsWith('.html')) {
-                            cleanBase += '/';
-                        }
+                        // Ambil link murni dari Kolom F database
+                        generatedURL = data.link || "";
                         
-                        if (cleanBase.includes('index.html')) {
-                            generatedURL = `${cleanBase}?id=${id}`;
-                        } else {
-                            generatedURL = `${cleanBase}index.html?id=${id}`;
+                        if (generatedURL) {
+                            previewLink.innerText = generatedURL;
+                            previewBox.style.display = 'block';
                         }
-
-                        previewLink.innerText = generatedURL;
-                        previewBox.style.display = 'block';
 
                         checkID(); // Refresh status badge
                     } else {
@@ -218,7 +213,6 @@
                 });
         }
 
-        // Fungsi Salin Link Otomatis
         function copyToClipboard() {
             if (!generatedURL) return;
 
